@@ -1,0 +1,256 @@
+{
+  "empresa": {
+    "nome": "Clínica RenovaLux Estética Avançada",
+    "cnpj": "12.345.678/0001-99",
+    "fundacao": "2017-04-12",
+    "slogan": "Sua beleza, nossa ciência.",
+    "missao": "Elevar a autoestima e proporcionar bem-estar aos nossos clientes por meio de tratamentos estéticos inovadores, seguros e cientificamente comprovados, priorizando a saúde, a confiança e a experiência personalizada.",
+    "visao": "Ser reconhecida nacionalmente como referência em estética avançada, oferecendo tecnologia de ponta, atendimento humanizado e resultados consistentes até 2030.",
+    "valores": [
+      "Ética e transparência",
+      "Segurança em todos os procedimentos",
+      "Alta tecnologia aplicada à estética",
+      "Atendimento humanizado",
+      "Resultados comprovados",
+      "Personalização completa da experiência",
+      "Compromisso com a satisfação do cliente",
+      "Inovação contínua"
+    ],
+    "contatos": {
+      "telefone": "(11) 99876-5432",
+      "whatsapp": "(11) 98888-7777",
+      "email": "contato@renovalux.com",
+      "instagram": "@renovalux_estetica",
+      "site": "https://www.renovalux.com"
+    },
+    "endereco": {
+      "rua": "Avenida das Flores",
+      "numero": "1050",
+      "bairro": "Parque Primavera",
+      "cidade": "São Paulo",
+      "estado": "SP",
+      "cep": "04567-000",
+      "ponto_referencia": "Próximo ao Shopping Primavera"
+    },
+    "horario_funcionamento": {
+      "segunda_sexta": "08:00 - 20:00",
+      "sabado": "08:00 - 14:00",
+      "domingo_feriados": "Fechado"
+    },
+    "formas_pagamento": [
+      "Dinheiro",
+      "Pix",
+      "Cartão de Crédito (até 12x)",
+      "Cartão de Débito",
+      "Boleto",
+      "Planos de assinatura",
+      "Parcerias corporativas"
+    ]
+  },
+
+  "profissionais": [
+    {
+      "nome": "Dra. Mariana Ribeiro",
+      "cargo": "Biomédica Esteta",
+      "registro": "CRBM 25698",
+      "experiencia": "9 anos",
+      "especialidades": [
+        "Harmonização facial",
+        "Toxina botulínica",
+        "Preenchimento labial",
+        "Skinbooster",
+        "Bioestimuladores"
+      ],
+      "sobre": "Especialista em estética avançada, com foco em procedimentos faciais e rejuvenescimento. Reconhecida por resultados naturais e atendimento humanizado.",
+      "formacao": "Pós-graduação em Biomedicina Estética pela FAMESP."
+    },
+    {
+      "nome": "Carla Santos",
+      "cargo": "Esteticista",
+      "registro": null,
+      "experiencia": "6 anos",
+      "especialidades": [
+        "Limpeza de pele",
+        "Tratamentos corporais",
+        "Drenagem linfática",
+        "Massagem relaxante",
+        "Microagulhamento"
+      ],
+      "formacao": "Técnica em Estética SENAC"
+    },
+    {
+      "nome": "Lucas Almeida",
+      "cargo": "Fisioterapeuta Dermato-Funcional",
+      "registro": "CREFITO 103254-F",
+      "experiencia": "7 anos",
+      "especialidades": [
+        "Criolipólise",
+        "Radiofrequência",
+        "Carboxiterapia",
+        "Tratamentos para celulite",
+        "Flacidez corporal"
+      ],
+      "formacao": "Fisioterapia - Universidade Anhembi Morumbi"
+    }
+  ],
+
+  "produtos_vendidos": [
+    {
+      "nome": "Gel de Ácido Hialurônico Premium",
+      "categoria": "Skincare",
+      "preco": 129.90,
+      "descricao": "Gel hidratante com ácido hialurônico de baixo peso molecular, ideal para uso diário e manutenção após procedimentos faciais."
+    },
+    {
+      "nome": "Creme Corporal Firmador",
+      "categoria": "Tratamento Corporal",
+      "preco": 159.90,
+      "descricao": "Creme redutor e firmador com colágeno e elastina. Auxilia na firmeza da pele."
+    },
+    {
+      "nome": "Máscara de Ouro 24k",
+      "categoria": "Skincare",
+      "preco": 199.00,
+      "descricao": "Máscara hidratante e iluminadora com micropartículas de ouro."
+    }
+  ],
+
+  "servicos": {
+    "faciais": [
+      {
+        "nome": "Limpeza de Pele Profunda",
+        "duracao": "1h20",
+        "preco": 180,
+        "descricao": "Remove cravos, impurezas e promove renovação celular. Inclui máscara calmante e alta frequência.",
+        "beneficios": [
+          "Redução de acne",
+          "Melhora da textura da pele",
+          "Desobstrução de poros",
+          "Pele mais luminosa"
+        ]
+      },
+      {
+        "nome": "Harmonização Facial Completa",
+        "duracao": "2h",
+        "preco": 1800,
+        "descricao": "Conjunto de técnicas que realçam a beleza natural e rejuvenescem o rosto.",
+        "beneficios": [
+          "Melhora da simetria",
+          "Rejuvenescimento",
+          "Realce dos pontos fortes do rosto"
+        ]
+      },
+      {
+        "nome": "Microagulhamento Avançado",
+        "duracao": "1h30",
+        "preco": 450,
+        "descricao": "Tratamento para cicatrizes, melasma, linhas finas e textura.",
+        "beneficios": [
+          "Estimula colágeno",
+          "Clareia manchas",
+          "Reduz marcas de acne"
+        ]
+      }
+    ],
+    "corporais": [
+      {
+        "nome": "Drenagem Linfática",
+        "duracao": "1h",
+        "preco": 150,
+        "descricao": "Técnica manual que estimula o sistema linfático.",
+        "beneficios": [
+          "Reduz inchaço",
+          "Melhora circulação",
+          "Relaxamento profundo"
+        ]
+      },
+      {
+        "nome": "Criolipólise",
+        "duracao": "1h",
+        "preco": 600,
+        "descricao": "Congelamento de gordura localizada para resultados visíveis em até 60 dias.",
+        "beneficios": [
+          "Redução de 20% a 40% da gordura",
+          "Não invasivo",
+          "Resultados progressivos"
+        ]
+      },
+      {
+        "nome": "Radiofrequência Corporal",
+        "duracao": "40 min",
+        "preco": 220,
+        "descricao": "Tratamento para flacidez e celulite.",
+        "beneficios": [
+          "Firmeza da pele",
+          "Melhora circulação",
+          "Ação anti-idade corporal"
+        ]
+      }
+    ]
+  },
+
+  "planos": [
+    {
+      "nome": "Plano Essencial",
+      "valor_mensal": 249.90,
+      "beneficios": [
+        "2 limpezas de pele por mês",
+        "10% de desconto em todos os serviços",
+        "Desconto em produtos selecionados"
+      ]
+    },
+    {
+      "nome": "Plano Premium",
+      "valor_mensal": 479.90,
+      "beneficios": [
+        "4 serviços mensais (qualquer categoria)",
+        "20% de desconto em procedimentos avançados",
+        "Sessão mensal de drenagem linfática"
+      ]
+    },
+    {
+      "nome": "Plano VIP",
+      "valor_mensal": 899.90,
+      "beneficios": [
+        "Serviços ilimitados (com regras de uso)",
+        "Descontos exclusivos",
+        "Atendimento prioritário",
+        "Consultoria de skincare personalizada"
+      ]
+    }
+  ],
+
+  "politicas": {
+    "cancelamento": "Cancelamentos devem ser realizados com pelo menos 6 horas de antecedência para evitar cobrança.",
+    "reembolso": "Procedimentos realizados não são reembolsáveis, exceto em casos de contraindicação realizada pela clínica.",
+    "atrasos": "Atrasos superiores a 15 minutos podem reduzir o tempo da sessão ou resultar no reagendamento."
+  },
+
+  "diferenciais": [
+    "Equipamentos certificados pela Anvisa",
+    "Equipe especializada com formação contínua",
+    "Sala exclusiva para relaxamento pré-procedimento",
+    "Estacionamento conveniado",
+    "Tecnologias de última geração",
+    "Avaliações detalhadas e personalizadas",
+    "Protocolos exclusivos RenovaLux"
+  ],
+
+  "avaliacoes": [
+    {
+      "cliente": "Ana Paula Dias",
+      "nota": 5,
+      "comentario": "Lugar impecável. Atendimento sensacional, extremamente atenciosos e profissionais!"
+    },
+    {
+      "cliente": "Juliana Ribeiro",
+      "nota": 4,
+      "comentario": "Gostei muito do tratamento, resultados já aparecem na segunda semana!"
+    },
+    {
+      "cliente": "Marcos Vinicius",
+      "nota": 5,
+      "comentario": "Ambiente confortável, profissionais excelentes, recomendo demais."
+    }
+  ]
+}
