@@ -1,0 +1,222 @@
+{
+  "empresa": {
+    "nome": "BlackBots Tecnologia Ltda.",
+    "cnpj": "51.563.319/0001-66",
+    "fundacao": "2023-07-26",
+    "slogan": "Automação inteligente para você dominar os mercados.",
+    "missao": "Democratizar o acesso aos mercados financeiros por meio de soluções automáticas, seguras e fáceis de usar — empoderando traders e investidores a conquistarem autonomia, disciplina e resultados consistentes.",
+    "visao": "Até 2030, ser reconhecida como a principal plataforma de robôs e sinais de trade da América Latina, com mais de 100.000 usuários ativos e mais de 1 bilhão de dólares sob automação.",
+    "valores": [
+      "Transparência total",
+      "Inovação contínua",
+      "Segurança e conformidade",
+      "Comunidade e educação",
+      "Eficiência operacional",
+      "Comprometimento com resultados",
+      "Acessibilidade para todos",
+      "Integridade profissional"
+    ],
+    "contatos": {
+      "telefone": "(11) 4000-1234",
+      "whatsapp": "(11) 98888-7777",
+      "email": "contato@blackbots.site",
+      "instagram": "@blackbots_official",
+      "site": "https://blackbots.site"
+    },
+    "endereco": {
+      "rua": "Rua Clodomiro Amazonas",
+      "numero": "713",
+      "bairro": "Vila Nova Conceição",
+      "cidade": "São Paulo",
+      "estado": "SP",
+      "cep": "04537-011",
+      "ponto_referencia": "Próximo à estação Faria Lima (linha amarela)"
+    },
+    "horario_funcionamento": {
+      "segunda_sexta": "08:00 - 22:00",
+      "sabado": "09:00 - 17:00",
+      "domingo_feriados": "Fechado"
+    },
+    "formas_pagamento": [
+      "Pix",
+      "Cartão de Crédito (até 12x sem juros)",
+      "Cartão de Débito",
+      "Boleto Bancário",
+      "Assinatura mensal recorrente",
+      "Transferência bancária",
+      "Parcerias corporativas"
+    ]
+  },
+
+  "profissionais": [
+    {
+      "nome": "Rafael Souza",
+      "cargo": "CTO & Cofundador",
+      "registro": null,
+      "experiencia": "10 anos",
+      "especialidades": [
+        "Desenvolvimento de robôs de trading",
+        "Integração com corretoras",
+        "Machine Learning para finanças"
+      ],
+      "sobre": "Engenheiro de software com experiência em HFT e plataformas financeiras. Lidera a arquitetura de automação da BlackBots.",
+      "formacao": "Engenharia de Computação – USP"
+    },
+    {
+      "nome": "Carla Menezes",
+      "cargo": "Head de Produto",
+      "registro": null,
+      "experiencia": "8 anos",
+      "especialidades": [
+        "UX/UI para fintechs",
+        "Gestão de produto ágil",
+        "Educação financeira"
+      ],
+      "sobre": "Responsável pelo design da experiência do usuário, pelos workflows de onboarding e pela roadmap de funcionalidades da plataforma.",
+      "formacao": "MBA em Gestão de Produto – FIAP"
+    },
+    {
+      "nome": "Luís Oliveira",
+      "cargo": "Especialista em Compliance Financeiro",
+      "registro": null,
+      "experiencia": "12 anos",
+      "especialidades": [
+        "Regulação de mercado financeiro",
+        "Políticas de risco e KYC",
+        "Segurança cibernética"
+      ],
+      "sobre": "Profissional que assegura que a BlackBots opere conforme regulamentações, com foco em proteção de dados e prevenção de fraudes.",
+      "formacao": "Direito – FGV"
+    }
+  ],
+
+  "produtos_vendidos": [
+    {
+      "nome": "BlackBots TradeIdeas – Plano Mensal",
+      "categoria": "SaaS / Assinatura",
+      "preco": 69.90,
+      "descricao": "Sinais de trade prontos enviados por WhatsApp + painel de execução em 3 cliques. Ideal para quem quer começar a automatizar suas operações com disciplina."
+    },
+    {
+      "nome": "BlackBots TradeIdeas – Plano Trimestral",
+      "categoria": "SaaS / Assinatura",
+      "preco": 178.00,
+      "descricao": "Assinatura trimestral com 15% de desconto sobre o plano mensal. Mesmo acesso aos sinais e painel de execução."
+    },
+    {
+      "nome": "BlackBots TradeIdeas – Plano Anual",
+      "categoria": "SaaS / Assinatura",
+      "preco": 599.00,
+      "descricao": "Assinatura anual (12 meses) com melhor custo-benefício. Ideal para usuários comprometidos a crescer no trading automatizado."
+    },
+    {
+      "nome": "Licença BlackBots API Premium",
+      "categoria": "Licença / Ferramenta",
+      "preco": 1299.00,
+      "descricao": "API para bots personalizados, integração direta com corretoras, ideal para traders que desejam desenvolver suas estratégias e automações avançadas."
+    }
+  ],
+
+  "servicos": {
+    "faciais": null,
+    "corporais": null,
+    "outros": [
+      {
+        "nome": "Onboarding de Automação Personalizada",
+        "duracao": "90 min",
+        "preco": 499.00,
+        "descricao": "Sessão individual com especialista da BlackBots para configurar e calibrar o robô de trading de acordo com perfil, objetivos e tolerância ao risco.",
+        "beneficios": [
+          "Setup personalizado",
+          "Definição de perfil de risco",
+          "Integração com corretora",
+          "Treinamento ao vivo"
+        ]
+      },
+      {
+        "nome": "Mentoria Premium em Trading Automatizado",
+        "duracao": "6 sessões de 1h",
+        "preco": 1499.00,
+        "descricao": "Programa de mentoria intensiva para traders que desejam elevar seus resultados com robôs e sinais — inclui análise de performance e otimização contínua.",
+        "beneficios": [
+          "Feedback individualizado",
+          "Relatórios de performance",
+          "Ajustes de estratégias",
+          "Suporte exclusivo"
+        ]
+      }
+    ]
+  },
+
+  "planos": [
+    {
+      "nome": "Plano Básico",
+      "valor_mensal": 69.90,
+      "beneficios": [
+        "Acesso aos sinais básicos (até 5 operações por semana)",
+        "Painel de execução automática 3-cliques",
+        "Suporte via WhatsApp (turno comercial)"
+      ]
+    },
+    {
+      "nome": "Plano Plus",
+      "valor_mensal": 149.90,
+      "beneficios": [
+        "Acesso aos sinais avançados (até 15 operações por semana)",
+        "Dashboard de performance",
+        "Webinars mensais exclusivos",
+        "Suporte via WhatsApp e Telegram"
+      ]
+    },
+    {
+      "nome": "Plano Pro",
+      "valor_mensal": 299.90,
+      "beneficios": [
+        "Sinais ilimitados (opções + forex + cripto)",
+        "Dashboard + relatórios personalizados",
+        "Sessão trimestral com especialista",
+        "Suporte prioritário 24/7"
+      ]
+    }
+  ],
+
+  "politicas": {
+    "cancelamento": "Assinatura pode ser cancelada a qualquer momento pelo painel. Cancelamentos feitos antes de 7 dias após contratação contam com garantia de devolução integral.",
+    "reembolso": "Reembolso integral disponível apenas para clientes que solicitarem dentro dos primeiros 7 dias e não tiverem executado mais de 3 operações automáticas.",
+    "atrasos": "Não aplicável — serviço digital disponibilizado imediatamente após a contratação."
+  },
+
+  "diferenciais": [
+    "Plataforma na nuvem com latência < 50 ms para execução de sinais",
+    "Mais de 100 mil operações automatizadas por mês",
+    "Suporte humano ativo em comunidade exclusiva para membros",
+    "Parcerias com corretoras nacionais e internacionais para preços competitivos",
+    "Painel de execução em 3-cliques, sem necessidade de programação",
+    "Roadmap de IA (machine learning) para otimização automática de robôs",
+    "Certificação ISO/IEC 27001 para segurança da informação",
+    "Educação financeira integrada (cursos, e-books, webinars)"
+  ],
+
+  "avaliacoes": [
+    {
+      "cliente": "Fernando Lima",
+      "nota": 5,
+      "comentario": "Desde que assinei, meus resultados deram um salto. A plataforma é simples e o suporte é excelente."
+    },
+    {
+      "cliente": "Marina Carvalho",
+      "nota": 4,
+      "comentario": "Gosto dos sinais, mas gostaria de ver mais operações em Forex. Ainda assim, recomendo."
+    },
+    {
+      "cliente": "Lucas Ribeiro",
+      "nota": 5,
+      "comentario": "Programa top para quem quer automatizar e não entende nada de código. Ganho de tempo e disciplina."
+    },
+    {
+      "cliente": "Ana Beatriz Souza",
+      "nota": 3,
+      "comentario": "Poderia melhorar a interface do dashboard, mas os sinais funcionam bem e o resultado compensou."
+    }
+  ]
+}

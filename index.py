@@ -1,122 +1,168 @@
-import json
-import numpy as np
-import os
 import glob
+import json
+import os
+import re
+import threading
+from collections import OrderedDict
+from typing import Dict, List, Tuple
+
+import google.generativeai as genai
+import numpy as np
 import tiktoken
 from dotenv import load_dotenv
-import google.generativeai as genai
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel, Field
 
 load_dotenv()
 
-# Configurar Gemini
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+AI_PROVIDER = os.getenv("AI_PROVIDER", "gemini").strip().lower()
+if os.getenv("GEMINI_API_KEY"):
+    genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
-# Ativar logs
-print_selected_chunks = True
-
-# Histórico da conversa
-conversation_history = []
-
-
-##########################################
-# 1. CHUNK DE TEXTOS
-##########################################
 
 def chunk_text(text, max_tokens=300):
     encoding = tiktoken.get_encoding("cl100k_base")
     tokens = encoding.encode(text)
-
     chunks = []
     for i in range(0, len(tokens), max_tokens):
-        chunk_tokens = tokens[i:i + max_tokens]
+        chunk_tokens = tokens[i : i + max_tokens]
         chunk_text = encoding.decode(chunk_tokens)
         chunks.append(chunk_text)
-
     return chunks
 
 
-##########################################
-# 2. EMBEDDINGS GEMINI
-##########################################
+def sanitize_text(s: str):
+    s = s.strip()
+    s = re.sub(r"[\x00-\x08\x0B\x0C\x0E-\x1F]", " ", s)
+    s = re.sub(r"\s+", " ", s)
+    return s
+
 
 def embed_text(text):
-    embedding = genai.embed_content(
-        model="models/text-embedding-004",
-        content=text,
-        task_type="retrieval_query"
-    )
-    return np.array(embedding["embedding"], dtype=np.float32)
+    if AI_PROVIDER == "gemini":
+        embedding = genai.embed_content(
+            model="models/text-embedding-004", content=text, task_type="retrieval_query"
+        )
+        return np.array(embedding["embedding"], dtype=np.float32)
+    elif AI_PROVIDER == "openai":
+        from openai import OpenAI
+
+        client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        resp = client.embeddings.create(model="text-embedding-3-small", input=text)
+        return np.array(resp.data[0].embedding, dtype=np.float32)
+    else:
+        raise ValueError("AI_PROVIDER inválido. Use 'gemini' ou 'openai'.")
 
 
-##########################################
-# 3. CARREGAR JSON INFO
-##########################################
-
-def load_documents():
-    docs = []
-    try:
-        with open("info.json", "r", encoding="utf-8") as f:
-            data = json.load(f)
-
-        # Cada seção do JSON vira um documento separado
-        for key, content in data.items():
-            docs.append({
-                "filename": f"info.json - {key}",
-                "content": {key: content}
-            })
-
-    except FileNotFoundError:
-        print("❌ Arquivo info.json não encontrado!")
-
-    return docs
+def cosine_similarity(a, b):
+    a = np.array(a, dtype=np.float32)
+    b = np.array(b, dtype=np.float32)
+    denom = np.linalg.norm(a) * np.linalg.norm(b)
+    if denom == 0:
+        return 0.0
+    return float(np.dot(a, b) / denom)
 
 
-##########################################
-# 4. GERAR E SALVAR EMBEDDINGS
-##########################################
+class ConversationStore:
+    def __init__(self):
+        self._store: Dict[Tuple[str, str], List[Dict[str, str]]] = {}
+        self._lock = threading.RLock()
 
-def build_vector_store():
-    vector_store = []
+    def append(self, company_id: str, user_id: str, role: str, content: str):
+        key = (company_id, user_id)
+        with self._lock:
+            self._store.setdefault(key, []).append({"role": role, "content": content})
 
-    docs = load_documents()
+    def recent(self, company_id: str, user_id: str, n: int = 4) -> List[Dict[str, str]]:
+        key = (company_id, user_id)
+        with self._lock:
+            return self._store.get(key, [])[-n:]
 
-    for doc in docs:
-        text = json.dumps(doc["content"], ensure_ascii=False, indent=2)
-        chunks = chunk_text(text)
-
-        for i, chunk in enumerate(chunks):
-            vec = embed_text(chunk).tolist()
-
-            vector_store.append({
-                "filename": doc["filename"],
-                "chunk_index": i,
-                "text": chunk,
-                "embedding": vec
-            })
-
-    with open("embeddings_store.json", "w", encoding="utf-8") as f:
-        json.dump(vector_store, f, indent=2, ensure_ascii=False)
-
-    print("✔ Embeddings criados e salvos!")
+    def clear(self, company_id: str, user_id: str):
+        key = (company_id, user_id)
+        with self._lock:
+            if key in self._store:
+                del self._store[key]
 
 
-##########################################
-# 5. BUSCA CONTEXTUAL (USANDO HISTÓRICO)
-##########################################
+class CompanyDataStore:
+    def __init__(self, data_dir: str, max_cache_size: int = 8):
+        self.data_dir = data_dir
+        self._index: Dict[str, str] = {}
+        self._cache: OrderedDict[str, List[Dict]] = OrderedDict()
+        self._lock = threading.RLock()
+        self.max_cache_size = max_cache_size
+        self._built = False
 
-def build_contextual_query(query):
-    """
-    Une o histórico com a pergunta atual,
-    criando uma query mais inteligente e contextual.
-    """
+    def _normalize(self, s: str) -> str:
+        return sanitize_text(s).lower()
 
-    last_messages = conversation_history[-4:]  # últimas interações
+    def _build_index(self):
+        files = glob.glob(os.path.join(self.data_dir, "*.json"))
+        for fp in files:
+            try:
+                with open(fp, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+            except Exception:
+                continue
+            base = os.path.splitext(os.path.basename(fp))[0]
+            self._index[base] = fp
+            empresa = data.get("empresa", {})
+            nome = empresa.get("nome") or ""
+            cnpj = empresa.get("cnpj") or ""
+            contatos = empresa.get("contatos", {})
+            site = contatos.get("site") or ""
+            if nome:
+                self._index[self._normalize(nome)] = fp
+            if cnpj:
+                self._index[self._normalize(cnpj)] = fp
+            if site:
+                self._index[self._normalize(site)] = fp
+        self._built = True
 
-    history_text = "\n".join([
-        f"{m['role']}: {m['content']}"
-        for m in last_messages
-    ])
+    def _evict_if_needed(self):
+        while len(self._cache) > self.max_cache_size:
+            self._cache.popitem(last=False)
 
+    def get_vector_store(self, company_id: str) -> List[Dict]:
+        key = self._normalize(company_id)
+        with self._lock:
+            if not self._built:
+                self._build_index()
+            if key in self._cache:
+                self._cache.move_to_end(key)
+                return self._cache[key]
+            fp = self._index.get(key)
+            if not fp:
+                raise FileNotFoundError("Dados da empresa não encontrados")
+            with open(fp, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            text = json.dumps(data, ensure_ascii=False)
+            chunks = chunk_text(text)
+            vector_store: List[Dict] = []
+            for i, chunk in enumerate(chunks):
+                vec = embed_text(chunk).tolist()
+                vector_store.append(
+                    {
+                        "filename": os.path.basename(fp),
+                        "chunk_index": i,
+                        "text": chunk,
+                        "embedding": vec,
+                    }
+                )
+            self._cache[key] = vector_store
+            self._cache.move_to_end(key)
+            self._evict_if_needed()
+            return vector_store
+
+
+conversation_store = ConversationStore()
+company_store = CompanyDataStore(data_dir=os.path.join(os.getcwd(), "data"))
+
+
+def build_contextual_query(company_id: str, user_id: str, query: str):
+    last_messages = conversation_store.recent(company_id, user_id, n=4)
+    history_text = "\n".join([f"{m['role']}: {m['content']}" for m in last_messages])
     contextual_query = f"""
 HISTÓRICO RELEVANTE:
 {history_text}
@@ -126,150 +172,159 @@ PERGUNTA ATUAL:
 
 Interprete a intenção principal da conversa.
 """
-
     return contextual_query
 
 
-##########################################
-# 6. SIMILARIDADE COSENO + RAG
-##########################################
-
-def cosine_similarity(a, b):
-    a = np.array(a, dtype=np.float32)
-    b = np.array(b, dtype=np.float32)
-    denom = (np.linalg.norm(a) * np.linalg.norm(b))
-    if denom == 0:
-        return 0
-    return np.dot(a, b) / denom
-
-
-def search(query, top_k=6):
-    contextual_query = build_contextual_query(query)
-
+def search(company_id: str, user_id: str, query: str, top_k: int = 6):
+    contextual_query = build_contextual_query(company_id, user_id, query)
     query_vec = embed_text(contextual_query)
-
-    with open("embeddings_store.json", "r", encoding="utf-8") as f:
-        vector_store = json.load(f)
-
+    vector_store = company_store.get_vector_store(company_id)
     scored = []
     for item in vector_store:
         score = cosine_similarity(query_vec, item["embedding"])
         scored.append((score, item))
-
     scored.sort(key=lambda x: x[0], reverse=True)
-
-    # Debug (ver chunks selecionados)
-    if print_selected_chunks:
-        print("\n🔍 CHUNKS ENCONTRADOS (baseado no HISTÓRICO + pergunta):")
-        for score, item in scored[:top_k]:
-            print(f"\nArquivo: {item['filename']}")
-            print(f"Chunk: {item['chunk_index']}")
-            print(f"Score: {score:.4f}")
-            print(f"Conteúdo:\n{item['text'][:300]}...\n")
-
     return [item for score, item in scored[:top_k]]
 
 
-##########################################
-# 7. GERAR RESPOSTA GEMINI + HISTÓRICO
-##########################################
+def generate_answer(full_prompt: str) -> str:
+    if AI_PROVIDER == "gemini":
+        model = genai.GenerativeModel("gemini-2.5-flash-lite")
+        response = model.generate_content(full_prompt)
+        return response.text
+    elif AI_PROVIDER == "openai":
+        from openai import OpenAI
 
-def ask_gpt(query):
-    global conversation_history
+        client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        completion = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": full_prompt}],
+            temperature=0.7,
+        )
+        return completion.choices[0].message.content
+    else:
+        raise ValueError("AI_PROVIDER inválido. Use 'gemini' ou 'openai'.")
 
-    # Adiciona pergunta ao histórico
-    conversation_history.append({
-        "role": "user",
-        "content": query
-    })
 
-    # Busca RAG contextual
-    results = search(query, top_k=6)
+class ChatRequest(BaseModel):
+    company_id: str = Field(min_length=1)
+    user_id: str = Field(min_length=1)
+    question: str = Field(min_length=1, max_length=4000)
 
-    context = "\n\n---\n\n".join([
-        f"[{r['filename']} - Chunk {r['chunk_index']}]\n{r['text']}"
-        for r in results
-    ])
 
-    # Prompt para Gemini
+class EndRequest(BaseModel):
+    company_id: str = Field(min_length=1)
+    user_id: str = Field(min_length=1)
+
+
+app = FastAPI(
+    title="IA Chat Service",
+    description="Serviço FastAPI para conversas com RAG por empresa e usuário",
+    version="1.0.0",
+)
+
+
+@app.post("/chat")
+def chat(req: ChatRequest):
+    company_id = sanitize_text(req.company_id)
+    user_id = sanitize_text(req.user_id)
+    question = sanitize_text(req.question)
+    if not company_id or not user_id or not question:
+        raise HTTPException(status_code=400, detail="Campos obrigatórios inválidos")
+    try:
+        company_store.get_vector_store(company_id)
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="Empresa não encontrada")
+    conversation_store.append(company_id, user_id, "user", question)
+    results = search(company_id, user_id, question, top_k=6)
+    context = "\n\n---\n\n".join(
+        [f"[{r['filename']} - Chunk {r['chunk_index']}]\n{r['text']}" for r in results]
+    )
     full_prompt = f"""
-REGRAS DO ASSISTENTE (ATENDENTE HUMANO, FORMAL E ESPECIALISTA EM VENDAS):
+REGRAS DO ASSISTENTE (ATENDENTE HUMANO, FORMAL, EDUCADO E ESPECIALISTA EM VENDAS):
 
-1. Você deve se comportar como um atendente humano real, formal, educado e extremamente profissional.  
-   - Mantenha um tom atencioso, cordial e respeitoso.  
-   - Não fale como robô ou IA.  
-   - Não mencione documentos, RAG ou tecnologia.
+1. COMPORTAMENTO HUMANO  
+   - Utilize o comportamento de um atendente humano profissional, educado, cordial e atencioso.  
+   - Mantenha uma comunicação formal, respeitosa e clara.  
+   - Nunca mencione IA, tecnologia, documentos ou funcionamento interno.  
+   - Não escreva como robô; comunique-se de forma natural, fluida e próxima.
 
-2. Você é um vendedor especializado nos serviços e produtos da clínica.  
-   - Use técnicas reais de vendas: rapport, SPIN Selling, persuasão suave, geração de valor, urgência e segurança.  
-   - Demonstre confiança e domínio do assunto, mas com formalidade.  
-   - Destaque benefícios, diferenciais e motivos para escolher a clínica.
+2. ESPECIALISTA EM VENDAS – ABORDAGEM PROFISSIONAL  
+   - Você é um vendedor treinado para explicar serviços e conduzir clientes até a decisão.  
+   - Utilize técnicas reais de vendas: rapport, conexão emocional, geração de valor, SPIN Selling, persuasão leve, urgência, autoridade e prova social (quando existir no contexto).  
+   - Destaque benefícios reais e diferenciais da clínica.
 
-3. Baseie suas respostas **EXCLUSIVAMENTE** no CONTEXTO e no HISTÓRICO fornecidos.  
-   - Nunca invente dados ou características não mencionadas.  
-   - Caso a informação não exista nos documentos, responda:  
-     “Informação não encontrada nos registros, mas posso ajudar com qualquer outra dúvida.”
+3. BASEAR-SE EXCLUSIVAMENTE NOS DADOS FORNECIDOS  
+   - Utilize somente o “CONTEXTO” e o “HISTÓRICO DA CONVERSA”.  
+   - Nunca invente informações; caso algo não exista no material, diga:  
+     “Informação não encontrada nos registros, mas posso ajudar com qualquer outra dúvida.”  
 
-4. Use o histórico da conversa para manter o foco no serviço/produto que está sendo discutido.  
-   - Se o cliente menciona um serviço específico, responda somente sobre ele.  
-   - Nunca misture informações de outros tópicos.
+4. FOCO NO CONTEXTO DO MOMENTO  
+   - Identifique o serviço ou produto que o cliente está discutindo.  
+   - Continue o atendimento apenas sobre esse serviço.  
+   - Nunca misture assuntos ou trocar para outro serviço sem o cliente pedir.
 
-5. O objetivo final é ajudar o cliente a avançar para uma decisão:  
-   - Sugira agendamento.  
-   - Mostre benefícios reais.  
-   - Explique vantagens práticas.  
-   - Reforce diferenciais competitivos.  
-   - Utilize perguntas estratégicas para direcionar a conversa (SPIN Selling).
+5. DETECÇÃO DE MOMENTO DE VALOR  
+   - Sempre monitore a conversa para perceber quando:  
+       a) O cliente já entendeu o serviço.  
+       b) O cliente demonstrou interesse.  
+       c) O cliente perguntou benefícios, valores, duração, vantagens ou resultados.  
+   - Quando perceber esses sinais, o atendente deve entender que é **o momento ideal para oferecer um agendamento**.
 
-6. Mantenha a comunicação clara, organizada e agradável:  
-   - Utilize frases curtas.  
-   - Utilize listas quando necessário.  
-   - Evite termos técnicos complexos.  
-   - Transmita segurança e profissionalismo.
+6. OFERTA DE AGENDAMENTO (FECHAMENTO ELEGANTE)  
+   Quando detectar que o cliente já recebeu informações suficientes ou demonstrou interesse, você deve iniciar um fechamento natural e profissional:
 
-7. O foco é sempre proporcionar uma experiência de atendimento impecável:  
-   - Seja prestativo.  
-   - Seja empático.  
-   - Seja proativo.  
-   - Demonstre interesse genuíno em ajudar o cliente a encontrar a melhor solução.
+   - Convide para agendar uma data.  
+   - Sugira horários livres (se existir no contexto).  
+   - Utilize frases como:  
+     “Se desejar, posso verificar uma data disponível para você.”  
+     “Ficarei feliz em agendar seu atendimento.”  
+     “Podemos reservar um horário para garantir sua vaga.”  
+     “Prefere manhã, tarde ou noite?”  
+   - NUNCA ofereça agendamento cedo demais; faça isso somente após perceber que o cliente já entendeu o serviço.
 
-"
+7. COMUNICAÇÃO CLARA, EMPÁTICA E ESTRATÉGICA  
+   - Utilize frases curtas e objetivas.  
+   - Use listas somente quando necessário.  
+   - Sempre demonstre empatia, cordialidade e interesse real em ajudar.  
+   - Mantenha o ritmo da conversa agradável, profissional e atencioso.
+
+8. PROATIVIDADE INTELIGENTE  
+   - Sempre que o cliente mostrar dúvida, explique com calma.  
+   - Sempre que o cliente demonstrar interesse, avance.  
+   - Sempre que o cliente sinalizar intenção de compra, ofereça o agendamento.  
+   - Nunca pressione; ofereça sempre como uma opção elegante e respeitosa.
 
 ===== HISTÓRICO =====
-{json.dumps(conversation_history, indent=2, ensure_ascii=False)}
+{json.dumps(conversation_store.recent(company_id, user_id, n=50), indent=2, ensure_ascii=False)}
 
 ===== CONTEXTO (RAG) =====
 {context}
 
 ===== PERGUNTA ATUAL =====
-{query}
+{question}
 
 RESPOSTA:
 """
-
-    model = genai.GenerativeModel("gemini-2.5-flash-lite")  
-    response = model.generate_content(full_prompt)
-
-    resposta = response.text
-
-    # Adiciona resposta ao histórico
-    conversation_history.append({
-        "role": "assistant",
-        "content": resposta
-    })
-
-    return resposta
+    try:
+        answer = generate_answer(full_prompt)
+    except Exception:
+        raise HTTPException(status_code=500, detail="Falha ao gerar resposta")
+    conversation_store.append(company_id, user_id, "assistant", answer)
+    return {"answer": answer}
 
 
-##########################################
-# 8. RODAR A APLICAÇÃO
-##########################################
+@app.delete("/chat")
+def end_chat(req: EndRequest):
+    company_id = sanitize_text(req.company_id)
+    user_id = sanitize_text(req.user_id)
+    if not company_id or not user_id:
+        raise HTTPException(status_code=400, detail="Campos obrigatórios inválidos")
+    conversation_store.clear(company_id, user_id)
+    return {"status": "ended"}
+
 
 if __name__ == "__main__":
-    print("\n🔧 Construindo embeddings...\n")
-    build_vector_store()
+    import uvicorn
 
-    while True:
-        query = input("\n❓ Pergunte algo sobre o documento: ")
-        resposta = ask_gpt(query)
-        print("\n🤖 RESPOSTA:\n", resposta)
+    uvicorn.run(app, host="0.0.0.0", port=int(os.getenv("PORT", "8000")))
