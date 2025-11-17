@@ -122,12 +122,9 @@ async def whapi_webhook(request: Request):
     except Exception:
         json_body = None
 
-    print("\n========== WHAPI WEBHOOK RECEBIDO ==========")
     print(json.dumps(json_body, indent=4, ensure_ascii=False))
 
     if not json_body or "messages" not in json_body:
-        print("⚠️ Nenhuma mensagem encontrada no payload")
-        print("============================================\n")
         return {"status": "received"}
 
     chan_map = _load_channels_map()
@@ -136,36 +133,22 @@ async def whapi_webhook(request: Request):
 
     for msg in json_body["messages"]:
 
-        # LOG CLARO PARA DIFERENCIAR
-        print("\nMensagem recebida do WHAPI:")
-        print("from:", msg.get("from"))
-        print("from_me:", msg.get("from_me"))
-        print("body:", msg.get("text", {}).get("body"))
-
-        # 🔥 1. MENSAGEM ENVIADA POR VOCÊ (IGNORAR)
         if msg.get("from_me") is True:
-            print("➡️ Ignorada (mensagem enviada por você)")
             continue
-
-        # 🔥 2. MENSAGEM DO CLIENTE (PROCESSAR)
-        print("➡️ Mensagem do cliente detectada!")
 
         user_id = msg.get("from")
         question = msg.get("text", {}).get("body")
 
         if not question:
-            print("⚠️ Mensagem sem texto. Ignorando.")
             continue
 
         if not company_id:
-            print("⚠️ Canal não mapeado para empresa. Ignorando.")
             continue
 
         company = sanitize_text(company_id)
         user = sanitize_text(user_id)
         q = sanitize_text(question)
 
-        # RAG FLOW
         conversation_store.append(company, user, "user", q)
 
         try:
