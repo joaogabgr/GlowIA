@@ -1,3 +1,4 @@
 .env
 conversations
 *embeddings.json
+__pycache__
